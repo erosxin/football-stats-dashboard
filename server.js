@@ -18,13 +18,14 @@ app.use(express.static('.'));
 
 // Footystats API配置
 const FOOTYSTATS_CONFIG = {
-    BASE_URL: 'https://api.footystats.org/v1',
-    // 这些是推测的端点，实际使用时需要根据真实API文档调整
+    BASE_URL: 'https://api.footystats.org',
+    API_KEY: '6c109863f19aa00ae6259be0d1b60d715410f55d6335d5401916fcc5120911ed',
+    // 基于实际测试的端点
     ENDPOINTS: {
-        LEAGUES: '/leagues',
-        MATCHES_TODAY: '/matches/today',
+        LEAGUES: '/league-list',
+        MATCHES_TODAY: '/todays-matches',
         FIXTURES: '/fixtures',
-        TEAM_STATS: '/teams/{id}/stats'
+        TEAM_STATS: '/team-stats'
     }
 };
 
@@ -98,12 +99,14 @@ async function proxyFootystatsAPI(endpoint, apiKey, params = {}) {
     try {
         const url = `${FOOTYSTATS_CONFIG.BASE_URL}${endpoint}`;
         
+        // Footystats API使用key参数而不是Authorization header
+        const queryParams = {
+            key: apiKey,
+            ...params
+        };
+        
         const response = await axios.get(url, {
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            params: params,
+            params: queryParams,
             timeout: 10000
         });
         
@@ -124,7 +127,8 @@ app.get('/', (req, res) => {
 // 获取联赛列表
 app.get('/api/leagues', async (req, res) => {
     try {
-        const apiKey = req.headers.authorization?.replace('Bearer ', '');
+        // 使用配置的API密钥或从请求头获取
+        const apiKey = req.headers.authorization?.replace('Bearer ', '') || FOOTYSTATS_CONFIG.API_KEY;
         
         if (!apiKey) {
             // 返回模拟数据
@@ -165,7 +169,8 @@ app.get('/api/leagues', async (req, res) => {
 // 获取今日比赛
 app.get('/api/matches/today', async (req, res) => {
     try {
-        const apiKey = req.headers.authorization?.replace('Bearer ', '');
+        // 使用配置的API密钥或从请求头获取
+        const apiKey = req.headers.authorization?.replace('Bearer ', '') || FOOTYSTATS_CONFIG.API_KEY;
         const league = req.query.league;
         
         if (!apiKey) {
