@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>足球数据展示平台 - Footystats</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 5px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            margin: 0 5px;
+        }
+
+        .tab.active {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .content {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .api-status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .api-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .api-status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .match-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .match-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .league-name {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .match-time {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .team {
+            text-align: center;
+            flex: 1;
+        }
+
+        .team-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .vs {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 0 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .leagues-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .league-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .league-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .league-card.selected {
+            border: 2px solid #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .league-logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .api-config {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .cors-notice {
+            background: #fff3cd;
+            color: #856404;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #ffeaa7;
+        }
+
+        .cors-notice h3 {
+            margin-bottom: 10px;
+        }
+
+        .cors-notice p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .tab {
+                margin: 0;
+            }
+            
+            .matches-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .teams {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .vs {
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ 足球数据展示平台</h1>
+            <p>基于 Footystats API 的实时足球数据</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('matches')">今日比赛</button>
+            <button class="tab" onclick="showTab('leagues')">联赛选择</button>
+            <button class="tab" onclick="showTab('settings')">API设置</button>
+        </div>
+
+        <div class="content">
+            <div id="api-status" class="api-status loading">
+                🔄 正在连接 Footystats API...
+            </div>
+
+            <!-- 今日比赛页面 -->
+            <div id="matches" class="tab-content active">
+                <h2>今日比赛</h2>
+                
+                <div class="cors-notice">
+                    <h3>⚠️ 重要提示</h3>
+                    <p>由于浏览器的CORS（跨域资源共享）限制，此静态页面无法直接调用Footystats API。</p>
+                    <p><strong>解决方案：</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>使用完整版本（包含Node.js后端）获得完整功能</li>
+                        <li>或安装浏览器CORS扩展来绕过限制</li>
+                    </ul>
+                    <p>当前显示的是演示数据。</p>
+                </div>
+                
+                <div id="matches-container">
+                    <div class="loading">正在加载今日比赛数据...</div>
+                </div>
+            </div>
+
+            <!-- 联赛选择页面 -->
+            <div id="leagues" class="tab-content">
+                <h2>选择关注的联赛</h2>
+                <div id="leagues-container">
+                    <div class="loading">正在加载联赛数据...</div>
+                </div>
+            </div>
+
+            <!-- API设置页面 -->
+            <div id="settings" class="tab-content">
+                <div class="api-config">
+                    <h2>API 配置</h2>
+                    <div class="form-group">
+                        <label for="api-key">Footystats API 密钥:</label>
+                        <input type="password" id="api-key" placeholder="请输入您的 API 密钥">
+                    </div>
+                    <button class="btn" onclick="saveApiKey()">保存配置</button>
+                    
+                    <div style="margin-top: 30px;">
+                        <h3>如何获取 API 密钥？</h3>
+                        <ol style="margin-top: 15px; line-height: 1.6;">
+                            <li>访问 <a href="https://footystats.org/api/documentations/" target="_blank">Footystats API 文档</a></li>
+                            <li>注册账户并登录</li>
+                            <li>在控制面板中找到您的 API 密钥</li>
+                            <li>将密钥粘贴到上方输入框中</li>
+                            <li>点击"保存配置"按钮</li>
+                        </ol>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <h3>完整功能版本</h3>
+                        <p>要获得完整的API功能，请使用包含Node.js后端的完整版本：</p>
+                        <ul style="margin-top: 15px; line-height: 1.6;">
+                            <li>克隆仓库: <code>git clone https://github.com/erosxin/football-stats-dashboard.git</code></li>
+                            <li>安装依赖: <code>npm install</code></li>
+                            <li>启动服务: <code>npm start</code></li>
+                            <li>访问: <code>http://localhost:12000</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let apiKey = '6c109863f19aa00ae6259be0d1b60d715410f55d6335d5401916fcc5120911ed'; // 默认API密钥
+        let selectedLeagues = [];
+        let allLeagues = [];
+        let todayMatches = [];
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApiKey();
+            initializeApp();
+        });
+
+        // 初始化应用
+        async function initializeApp() {
+            updateApiStatus('loading', '🔄 正在连接 Footystats API...');
+            
+            // 由于CORS限制，直接显示模拟数据
+            setTimeout(() => {
+                updateApiStatus('disconnected', '⚠️ 静态页面受CORS限制 - 显示演示数据');
+                showMockData();
+            }, 1000);
+        }
+
+        // 显示模拟数据
+        function showMockData() {
+            displayMockLeagues();
+            displayMockMatches();
+        }
+
+        // 显示模拟联赛
+        function displayMockLeagues() {
+            const mockLeagues = [
+                { name: '英超', country: '英格兰' },
+                { name: '西甲', country: '西班牙' },
+                { name: '德甲', country: '德国' },
+                { name: '意甲', country: '意大利' },
+                { name: '法甲', country: '法国' },
+                { name: '中超', country: '中国' }
+            ];
+
+            const container = document.getElementById('leagues-container');
+            const html = mockLeagues.map(league => `
+                <div class="league-card" onclick="toggleLeague('${league.name}')">
+                    <div class="league-logo">⚽</div>
+                    <h3>${league.name}</h3>
+                    <p>${league.country}</p>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<div class="leagues-grid">${html}</div>`;
+        }
+
+        // 显示模拟比赛
+        function displayMockMatches() {
+            const mockMatches = [
+                {
+                    league: '英超',
+                    home_name: '曼城',
+                    away_name: '利物浦',
+                    date: '今日 20:30',
+                    status: '未开始',
+                    game_week: 15,
+                    homeGoalCount: 0,
+                    awayGoalCount: 0
+                },
+                {
+                    league: '西甲',
+                    home_name: '皇马',
+                    away_name: '巴萨',
+                    date: '今日 22:00',
+                    status: '未开始',
+                    game_week: 16,
+                    homeGoalCount: 0,
+                    awayGoalCount: 0
+                },
+                {
+                    league: '德甲',
+                    home_name: '拜仁',
+                    away_name: '多特',
+                    date: '今日 21:30',
+                    status: '进行中',
+                    game_week: 12,
+                    homeGoalCount: 1,
+                    awayGoalCount: 0
+                },
+                {
+                    league: '意甲',
+                    home_name: '尤文',
+                    away_name: 'AC米兰',
+                    date: '今日 19:45',
+                    status: '已结束',
+                    game_week: 14,
+                    homeGoalCount: 2,
+                    awayGoalCount: 1
+                }
+            ];
+
+            const container = document.getElementById('matches-container');
+            const html = mockMatches.map(match => `
+                <div class="match-card">
+                    <div class="match-header">
+                        <span class="league-name">${match.league}</span>
+                        <span class="match-time">${match.date}</span>
+                    </div>
+                    <div class="teams">
+                        <div class="team">
+                            <div class="team-name">${match.home_name}</div>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="team">
+                            <div class="team-name">${match.away_name}</div>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">状态</div>
+                            <div class="stat-value">${match.status}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">轮次</div>
+                            <div class="stat-value">${match.game_week}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">主队进球</div>
+                            <div class="stat-value">${match.homeGoalCount}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">客队进球</div>
+                            <div class="stat-value">${match.awayGoalCount}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<div class="matches-grid">${html}</div>`;
+        }
+
+        // 切换标签页
+        function showTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有标签的激活状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(tabName).classList.add('active');
+            
+            // 激活选中的标签
+            event.target.classList.add('active');
+        }
+
+        // 切换联赛选择
+        function toggleLeague(leagueName) {
+            const index = selectedLeagues.indexOf(leagueName);
+            if (index > -1) {
+                selectedLeagues.splice(index, 1);
+            } else {
+                selectedLeagues.push(leagueName);
+            }
+            
+            // 更新UI
+            document.querySelectorAll('.league-card').forEach(card => {
+                const name = card.querySelector('h3').textContent;
+                if (selectedLeagues.includes(name)) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+
+        // 更新API状态
+        function updateApiStatus(status, message) {
+            const statusElement = document.getElementById('api-status');
+            statusElement.className = `api-status ${status}`;
+            statusElement.textContent = message;
+        }
+
+        // 保存API密钥
+        function saveApiKey() {
+            const keyInput = document.getElementById('api-key');
+            const newKey = keyInput.value.trim();
+            
+            if (!newKey) {
+                alert('请输入API密钥');
+                return;
+            }
+            
+            apiKey = newKey;
+            localStorage.setItem('footystats_api_key', apiKey);
+            
+            // 显示成功消息
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = '✅ API密钥已保存！要获得完整功能，请使用Node.js版本。';
+            keyInput.parentNode.insertBefore(successDiv, keyInput.nextSibling);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+        }
+
+        // 加载保存的API密钥
+        function loadApiKey() {
+            const savedKey = localStorage.getItem('footystats_api_key');
+            if (savedKey) {
+                apiKey = savedKey;
+                document.getElementById('api-key').value = savedKey;
+            }
+        }
+    </script>
+</body>
+</html>
