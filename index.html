@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>足球数据展示平台</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1><i class="fas fa-futbol"></i> 足球数据展示平台</h1>
+            <nav class="nav">
+                <button class="nav-btn active" data-tab="today">今日比赛</button>
+                <button class="nav-btn" data-tab="leagues">联赛选择</button>
+                <button class="nav-btn" data-tab="settings">设置</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- 今日比赛标签页 -->
+            <div id="today" class="tab-content active">
+                <div class="section-header">
+                    <h2>今日比赛</h2>
+                    <div class="date-info">
+                        <i class="fas fa-calendar-day"></i>
+                        <span id="current-date"></span>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <select id="league-filter">
+                        <option value="">所有联赛</option>
+                    </select>
+                    <button id="refresh-btn" class="btn-primary">
+                        <i class="fas fa-sync-alt"></i> 刷新数据
+                    </button>
+                </div>
+
+                <div id="matches-container" class="matches-container">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>加载比赛数据中...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 联赛选择标签页 -->
+            <div id="leagues" class="tab-content">
+                <div class="section-header">
+                    <h2>联赛管理</h2>
+                    <p>选择您想要关注的联赛</p>
+                </div>
+                
+                <div id="leagues-container" class="leagues-container">
+                    <!-- 联赛列表将在这里动态生成 -->
+                </div>
+            </div>
+
+            <!-- 设置标签页 -->
+            <div id="settings" class="tab-content">
+                <div class="section-header">
+                    <h2>API设置</h2>
+                    <p>配置您的Footystats API密钥</p>
+                </div>
+                
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label for="api-key">Footystats API密钥:</label>
+                        <input type="password" id="api-key" placeholder="请输入您的API密钥">
+                        <button id="save-api-key" class="btn-primary">保存</button>
+                    </div>
+                    
+                    <div class="api-status">
+                        <div id="api-status-indicator" class="status-indicator">
+                            <i class="fas fa-circle"></i>
+                            <span>未配置API密钥</span>
+                        </div>
+                    </div>
+                    
+                    <div class="api-info">
+                        <h3>如何获取API密钥？</h3>
+                        <ol>
+                            <li>访问 <a href="https://footystats.org/api/" target="_blank">Footystats API</a></li>
+                            <li>注册账户并选择合适的计划</li>
+                            <li>在控制面板中获取您的API密钥</li>
+                            <li>将密钥粘贴到上方输入框中</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 足球数据展示平台 | 数据来源: Footystats API</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
